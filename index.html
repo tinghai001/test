@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trust Wallet 自动连接 Demo</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 40px; }
+    #status { font-size: 18px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h2>🔗 Trust Wallet 自动连接 Demo</h2>
+  <div id="status">正在检测设备类型...</div>
+
+  <script src="https://unpkg.com/@walletconnect/sign-client/dist/browser/umd/index.min.js"></script>
+  <script>
+    const status = document.getElementById("status");
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    async function connectWithWalletConnect() {
+      status.textContent = "⏳ 初始化 WalletConnect...";
+      const client = await WalletConnectSign.init({
+        projectId: "4a1f31ab60adfe840c6e1cfc290f0e2c", // 你可以换成自己的 projectId
+        metadata: {
+          name: "AutoConnect DApp",
+          description: "Trust Wallet Auto Connect Demo",
+          url: "https://example.com",
+          icons: ["https://example.com/icon.png"]
+        }
+      });
+
+      const { uri, approval } = await client.connect({
+        requiredNamespaces: {
+          eip155: {
+            methods: ["eth_sendTransaction", "personal_sign", "eth_signTypedData"],
+            chains: ["eip155:1"],
+            events: ["chainChanged", "accountsChanged"]
+          }
+        }
+      });
+
+      if (uri) {
+        const encoded = encodeURIComponent(uri);
+        const deepLink = `trust://wallet_connect?uri=${encoded}`;
+        window.location.href = deepLink;
+      }
+
+      const session = await approval();
+      const address = session.namespaces.eip155.accounts[0];
+      status.textContent = `✅ 已连接地址: ${address}`;
+    }
+
+    async function connectWithEthereumProvider() {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+          status.textContent = "✅ 已连接插件地址: " + accounts[0];
+        } catch (err) {
+          status.textContent = "❌ 用户拒绝连接";
+        }
+      } else {
+        status.textContent = "❌ 未检测到插件，尝试使用 WalletConnect...";
+        await connectWithWalletConnect();
+      }
+    }
+
+    window.onload = () => {
+      if (isMobile) {
+        connectWithWalletConnect(); // 移动端自动跳转
+      } else {
+        connectWithEthereumProvider(); // 桌面端自动连接插件
+      }
+    };
+  </script>
+</body>
+</html>
