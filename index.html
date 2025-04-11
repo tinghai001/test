@@ -19,16 +19,25 @@
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     async function connectWithWalletConnect() {
-      status.textContent = "⏳ 初始化 WalletConnect...";
-      const client = await WalletConnectSign.init({
-        projectId: "4a1f31ab60adfe840c6e1cfc290f0e2c", // 你可以换成自己的 projectId
-        metadata: {
-          name: "AutoConnect DApp",
-          description: "Trust Wallet Auto Connect Demo",
-          url: "https://example.com",
-          icons: ["https://example.com/icon.png"]
-        }
-      });
+      status.textContent = "🚀 正在初始化 WalletConnect...";
+      console.log("开始初始化 WalletConnect");
+      
+      try {
+        const client = await WalletConnectSign.init({
+          projectId: "3d4f2125e123c4e678f222cbd4dc9edb",
+          metadata: {
+            name: "Test DApp",
+            description: "Test DApp Description",
+            url: "https://example.com",
+            icons: ["https://example.com/icon.png"]
+          }
+        });
+        console.log("✅ 初始化成功", client);
+      } catch (err) {
+        console.error("❌ 初始化失败", err);
+        status.textContent = "❌ 初始化 WalletConnect 失败: " + err.message;
+      }
+    
 
       const { uri, approval } = await client.connect({
         requiredNamespaces: {
